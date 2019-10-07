@@ -96,7 +96,8 @@ $header-height: calc($stage-menu-height - 2px);
 
 .add-button {
     position: absolute;
-    bottom: 0.75rem;
+    bottom: 1rem;
+    right: 6rem;
 }
 
 .raised, .raised .header {

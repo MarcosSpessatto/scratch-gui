@@ -14,6 +14,11 @@ var postcssImport = require('postcss-import');
 
 const STATIC_PATH = process.env.STATIC_PATH || '/static';
 
+if (!process.env.RC_URL) {
+    console.error('You need set RC_URL env var');
+    process.exit(1);
+}
+
 const base = {
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
     devtool: 'cheap-module-source-map',
@@ -136,6 +141,7 @@ module.exports = [
         plugins: base.plugins.concat([
             new webpack.DefinePlugin({
                 'process.env.NODE_ENV': '"' + process.env.NODE_ENV + '"',
+                'process.env.RC_URL': '"' + process.env.RC_URL + '"',
                 'process.env.DEBUG': Boolean(process.env.DEBUG),
                 'process.env.GA_ID': '"' + (process.env.GA_ID || 'UA-000000-01') + '"'
             }),
