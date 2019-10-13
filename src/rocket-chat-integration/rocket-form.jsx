@@ -75,20 +75,41 @@ export class RocketForm extends Component {
 				if (res.success === false) {
 					throw new Error(res.errorType);
 				}
-				return res.user._id;
+				return res.user;
 			});
 	}
 
-	saveUserOnLocalStorageAndShowStatus(userId) {
-		localStorage.setItem('rocketUser', JSON.stringify({ _id: userId, email: this.state.email, name: this.state.name, username: this.state.username }));
-		const html = document.createElement("div");
-        html.innerHTML = `Usuário: <b>${this.state.username}</b><br> Para acessar o grupo de estudos no Rocket.Chat, acesse: <a href="${process.env.RC_URL}/channel/scratch" target="_blank">Rocket.Chat</a>`;
+	verifyIfRCUserAlreadyExists() {
+		const { username } = this.state;
+		return fetch(`${this.url}/api/v1/users.info?username=${username}`, {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+				'X-Auth-Token': this.rcAuth.authToken,
+				'X-User-Id': this.rcAuth.userId,
+			},
+		})
+			.then((res) => res.json())
+			.then((res) => {
+				if (res.success === false && res.errorType !== 'error-invalid-user') {
+					throw new Error(res.errorType);
+				}
+				return res.user;
+			});
+	}
 
-        swal({
+	saveUserOnLocalStorageAndShowStatus(user) {
+		const { _id, email, name, username } = user;
+		localStorage.setItem('rocketUser', JSON.stringify({ _id, email, name, username }));
+		const html = document.createElement("div");
+		html.innerHTML = `Usuário: <b>${this.state.username}</b><br> Para acessar o grupo de estudos no Rocket.Chat, acesse: <a href="${process.env.RC_URL}/channel/scratch" target="_blank">Rocket.Chat</a>`;
+
+		swal({
 			icon: 'success',
 			title: 'Seu usuário foi criado no Rocket.Chat',
-            content: html,
-        });
+			content: html,
+		});
 		this.setState({ loading: false });
 		this.props.onRocketRegisterDone();
 	}
@@ -104,8 +125,14 @@ export class RocketForm extends Component {
 		}
 		this.setState({ loading: true });
 		this.doRCLogin()
-			.then(() => this.createRCUser())
-			.then((userId) => this.saveUserOnLocalStorageAndShowStatus(userId))
+			.then(() => this.verifyIfRCUserAlreadyExists())
+			.then((user) => {
+				if (!user) {
+					return this.createRCUser();
+				}
+				return user;
+			})
+			.then((user) => this.saveUserOnLocalStorageAndShowStatus(user))
 			.catch((e) => swal('Ops, parece que o email ou o nome de usuário já estão sendo usados', '', 'error'));
 	}
 

@@ -278,7 +278,28 @@ class MenuBar extends React.Component {
         html.innerHTML = `Seu usuário do Rocket.Chat é: <b>${rcUser.username}</b>.<br> <a href="${process.env.RC_URL}" target="_blank">Clique para acessar o Rocket.Chat</a>`;
 
         swal({
+            buttons: {
+                cancel: {
+                    text: "Entrar com outro usuário",
+                    value: 'cancel',
+                    visible: true,
+                    className: "",
+                    closeModal: true,
+                },
+                confirm: {
+                    text: "OK",
+                    value: true,
+                    visible: true,
+                    className: "",
+                    closeModal: true
+                }
+            },
             content: html
+        }).then((value) => {
+            if(value === 'cancel') {
+                localStorage.removeItem('rocketUser');
+                window.location.reload();
+            }
         });
     }
 
